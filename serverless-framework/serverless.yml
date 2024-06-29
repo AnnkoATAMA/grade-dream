@@ -1,0 +1,22 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: takumiannko
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: grand-dream
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: serverless-framework
+
+provider:
+  name: aws
+  runtime: python3.12
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - httpApi:
+          path: /
+          method: get
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
