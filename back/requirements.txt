@@ -4,3 +4,11 @@ gunicorn
 pydantic
 python-dotenv
 line-bot-sdk
+beautifulsoup4
+requests
+selenium
+pandas
+tqdm
+BeautifulSoup4
+requests
+lxml
