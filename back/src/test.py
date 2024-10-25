@@ -1,30 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 
-load_url = "https://www.jra.go.jp/JRADB/accessS.html?CNAME=pw01sde1008202405061120241020/ED"
+load_url = "https://race.netkeiba.com/race/result.html?race_id=202408050611&rf=race_list"
 html = requests.get(load_url)
 soup = BeautifulSoup(html.content, "html.parser")
 
-# print(soup.find("tbody").text)
-race_result = soup.find(id="race_result")
+race_result = soup.find(id="tab_ResultSelect_1_con")
 result_table = race_result.find("tbody")
-
-# for tr in result_table.find_all("tr"):
-#     saerch_td = tr.find_all("td")[:8]
-#     for td in saerch_td:
-#         print(td.text)
-#     print("***********")
-
-# datas = []
-
-# for tr in result_table.find_all("tr"):
-#     data = {}
-#     for search_td in tr.find_all("td")[:8]:
-#         data[search_td.text] = search_td.parent.findNext("td").text.strip()
-#     datas.append(data)
-
-# print(datas)
-
 
 def get_text(element):
   if(_cell:=element.text.replace("\n", "")):
@@ -34,10 +16,8 @@ def get_text(element):
   else:
     return ""
 
-row_keys = ["rank", "waku", "horse_num", "name", "age", "weight", "jockey", "time"]
+row_keys = ["rank", "waku", "horse_num", "name", "age", "weight", "jockey", "time", "sa", "ninki", "odds"]
 rows = [row.find_all("td") for row in result_table.find_all("tr")]
 result = [dict(zip(row_keys, map(get_text, row))) for row in rows]
 
 print(result)
-
-# {key : value}

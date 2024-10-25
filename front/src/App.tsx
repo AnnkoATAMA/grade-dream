@@ -1,10 +1,10 @@
-
 import './App.css';
+import RaceForm from './components/RaceForm';
 
 function App() {
   return (
     <div>
-      aaa
+      <RaceForm />
     </div>
   );
 }
