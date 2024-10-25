@@ -6,8 +6,9 @@ from routers import router
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://annko.jp"
 ]
 
 app.add_middleware(
@@ -18,8 +19,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/healthcheck")
+def nice():
+    return "healthy!"
+
 @app.get("/nicerace")
-def health():
+def nice():
     return "nice!"
 
 app.router.include_router(router.router, prefix="/api")
