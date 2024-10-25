@@ -30,7 +30,7 @@ const RaceForm: React.FC = () => {
     setResults(null);
 
     try {
-      const response = await axios.post<RaceResult[]>("http://localhost:8000/race_result", {
+      const response = await axios.post<RaceResult[]>("http://localhost:8000/api/keiba/race_result", {
         racecourse,
         count,
         race_date,
