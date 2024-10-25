@@ -5,6 +5,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
 
   react:
     build:
@@ -12,3 +18,29 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 3s
+    depends_on:
+      fastapi:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27.1
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/config/dev_default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      front:
+        condition: service_healthy
+
+  tunnel:
+    restart: always
+    image: cloudflare/cloudflared
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=YOUR_TOKEN_HERE
