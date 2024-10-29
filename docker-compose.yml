@@ -52,8 +52,8 @@ services:
     restart: always
     image: cloudflare/cloudflared
     command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=eyJhIjoiZTEzYzBlNTgwMjVjZThiNWMzMWI0Y2E4Mjg4MzM2YjgiLCJ0IjoiZTY3MjUwNmEtYjQyMC00MjM5LTkxNDItMzE2ODg3ZGVlZGQ2IiwicyI6IllXWmhabVkwTWpZdE1ERXhNQzAwTUdNekxUaGhOREF0WVdNMU5URTFOVFUzWWpWbSJ9
+    env_file:
+      - ./.env
     depends_on:
       nginx:
         condition: service_healthy
