@@ -2,9 +2,10 @@ from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-import requests
 import os
 from dotenv import load_dotenv
+
+from .keiba import get_race_results
 line_router = APIRouter()
 
 # LINE APIの設定
@@ -19,7 +20,9 @@ async def callback(request: Request, background_tasks: BackgroundTasks):
     body = await request.body()
     print(body)
     try:
-        handler.handle(body.decode("utf-8"), signature)
+        background_tasks.add_task(
+            handler.handle, body.decode("utf-8"), signature
+        )
     except InvalidSignatureError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -29,10 +32,12 @@ async def callback(request: Request, background_tasks: BackgroundTasks):
 
 # LINE Botのメッセージ受信と処理
 @handler.add(MessageEvent, message=TextMessage)
-def handle_message(event, background_tasks: BackgroundTasks):
+def handle_message(event):
     user_message = event.message.text
+    print(user_message)
     try:
-        racecourse, count, race_date, race_num = user_message.split(",")
+        racecourse, count, race_date, race_num = user_message.replace(" ", "").split(",")
+        print(racecourse, count, race_date, race_num)
     except ValueError:
         line_bot_api.reply_message(
             event.reply_token,
@@ -40,20 +45,14 @@ def handle_message(event, background_tasks: BackgroundTasks):
         )
         return
 
-    # FastAPI 競馬APIへのリクエストをバックグラウンドで実行
-    background_tasks.add_task(send_race_result, event.reply_token, racecourse, count, race_date, race_num)
+    send_race_result(event.reply_token, racecourse, count, race_date, race_num)
 
-async def send_race_result(reply_token, racecourse, count, race_date, race_num):
-    url = "http://localhost:8000/api/race_result"
-    response = requests.post(url, json={
-        "racecourse": racecourse,
-        "count": count,
-        "race_date": race_date,
-        "race_num": race_num
-    })
+def send_race_result(reply_token, racecourse, count, race_date, race_num):
+    result = get_race_results(racecourse, count, race_date, race_num)
+    print(result)
 
-    if response.status_code == 200:
-        result_text = "\n".join([f"{r['rank']}: {r['name']} (人気: {r['ninki']}, オッズ: {r['odds']})" for r in response.json()])
+    if result:
+        result_text = "\n".join([f"{r['rank']}: {r['name']} (人気: {r['ninki']}, オッズ: {r['odds']})" for r in result])
         line_bot_api.reply_message(reply_token, TextSendMessage(text=result_text))
     else:
         line_bot_api.reply_message(reply_token, TextSendMessage(text="結果が取得できませんでした。"))
