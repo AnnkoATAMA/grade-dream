@@ -8,7 +8,7 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://127.0.0.1",
-    "https://annko.jp"
+    "https://grand.annko.jp"
 ]
 
 app.add_middleware(
@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/healthcheck")
+@app.get("/api/healthcheck")
 def nice():
     return "healthy!"
 
