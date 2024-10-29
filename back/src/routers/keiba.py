@@ -22,20 +22,24 @@ racecourse_codes = {
 
 # リンク生成とスクレイピング
 @keiba_router.post("/race_result")
-async def get_race_results(request: RaceRequest):
-    racecourse_code = racecourse_codes.get(request.racecourse)
-    if not racecourse_code:
-        raise HTTPException(status_code=400, detail="無効な競馬場名です。")
+async def get_race_results_handler(request: RaceRequest):
+    if not (results:=get_race_results(request.racecourse_code, request.count, request.race_date, request.race_num)):
+        raise HTTPException(status_code=404, detail="レース結果が見つかりませんでした。")
+    return results
     
-    load_url = f"https://race.netkeiba.com/race/result.html?race_id=2024{racecourse_code}{request.count}{request.race_date}{request.race_num}&rf=race_list"
+
+def get_race_results(racecourse, count, race_date, race_num):
+    racecourse_code = racecourse_codes.get(racecourse)
+    load_url = f"https://race.netkeiba.com/race/result.html?race_id=2024{racecourse_code}{count}{race_date}{race_num}&rf=race_list"
     response = requests.get(load_url)
     if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="レース結果ページにアクセスできません。")
+        return None
     
     soup = BeautifulSoup(response.content, "html.parser")
     race_result = soup.find(id="tab_ResultSelect_1_con")
     if not race_result:
-        raise HTTPException(status_code=404, detail="レース結果が見つかりませんでした。")
+        print("aaaaaaaaaa")
+        return None
 
     result_table = race_result.find("tbody")
 
