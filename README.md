@@ -1,4 +1,4 @@
-# projectをビルド手順
+# projectのビルド手順
 
 ## back
 
