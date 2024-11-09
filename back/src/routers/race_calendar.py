@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from time import sleep
@@ -22,9 +23,10 @@ racecourse_codes = {
 def get_kaisai_date_url(request: DateRequest):
     racecourse_code = racecourse_codes.get(request.racecourse)
     selectedDate = request.selectedDate
-    race_num = request.race_num + "R"
+    race_num = request.race_num
     print(f"Selected Date: {selectedDate}")
     year, month, date = selectedDate.split("-")
+    race_date = year + month + date
     url = f"https://race.netkeiba.com/top/calendar.html?year={year}&month={month}"
     header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"}
     print(f"URL: {url}")
@@ -57,11 +59,7 @@ def get_kaisai_date_url(request: DateRequest):
         raise HTTPException(status_code=500, detail="データ取得に失敗しました。")
     
     soup = BeautifulSoup(responses.content, "html.parser")
-
-    for race_list in soup.find_all(class_ = "Race_Num Race_Fixed"):
-        race_number = race_list.find("span")
-        if race_number and race_number.text == race_num:
-            race_id = race_list.find("span", class_="MyRaceCheck")["id"]
-            race_code = race_id.replace("myrace_","")
-            print(race_code)
-            return race_code
+    kaisai_data = json.loads(str(responses.content).split("var kaisai_json = ")[1].split(";")[0])
+    kaisai_id = kaisai_data[race_date][racecourse_code]
+    race_code = kaisai_id + race_num
+    return race_code

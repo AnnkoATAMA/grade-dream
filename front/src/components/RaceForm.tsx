@@ -4,6 +4,12 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { ja } from "date-fns/locale";  
 import axios from "axios";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface RaceResult {
   rank: string;
@@ -30,8 +36,8 @@ const RaceForm: React.FC = () => {
     event.preventDefault();
     setError("");  
     setResults(null); 
+    const formattedDate = selectedDate ? dayjs(selectedDate).tz("Asia/Tokyo").format("YYYY-MM-DD") : "";
 
-    const formattedDate = selectedDate ? selectedDate.toISOString().split('T')[0] : ""; 
     console.log({
       racecourse,
       selectedDate: formattedDate,
