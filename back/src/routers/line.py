@@ -5,14 +5,10 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
 from dotenv import load_dotenv
 
-from .keiba import get_race_results
+from .keiba import RaceRequest, get_race_results_handler
+
 line_router = APIRouter()
 
-racecourse_codes = {
-    "札幌": "01", "函館": "02", "福島": "03", "新潟": "04",
-    "東京": "05", "中山": "06", "中京": "07", "京都": "08",
-    "阪神": "09", "小倉": "10"
-}
 
 # LINE APIの設定
 load_dotenv()
@@ -42,20 +38,24 @@ def handle_message(event):
     user_message = event.message.text
     print(user_message)
     try:
-        racecourse, count, race_date, race_num = user_message.replace(" ", "").split(",")
-        racecourse_code = racecourse_codes.get(racecourse)
-        print(racecourse, count, race_date, race_num)
+        racecourse, selectedDate, race_num = user_message.replace(" ", "").split(",")
+        print(racecourse, selectedDate, race_num)
     except ValueError:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="入力形式が間違っています。例: 京都,05,06,11")
+            TextSendMessage(text="入力形式が間違っています。例: 京都,2024-10-20,11")
         )
         return
 
-    send_race_result(event.reply_token, racecourse_code, count, race_date, race_num)
+    send_race_result(event.reply_token, racecourse, selectedDate, race_num)
 
-def send_race_result(reply_token, racecourse_code, count, race_date, race_num):
-    result = get_race_results(racecourse_code, count, race_date, race_num)
+def send_race_result(reply_token, racecourse, selectedDate, race_num):
+    race_request = RaceRequest(
+        racecourse=racecourse,
+        selectedDate=selectedDate,
+        race_num=race_num
+    )
+    result = get_race_results_handler(race_request)
     print(result)
 
     if result:

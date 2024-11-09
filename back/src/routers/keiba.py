@@ -3,43 +3,42 @@ from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 
+from .race_calendar import DateRequest, get_kaisai_date_url
+
 keiba_router = APIRouter()
 
 class RaceRequest(BaseModel):
     racecourse: str
-    count: str
-    race_date: str
+    selectedDate: str
     race_num: str
 
-# 競馬場コード対応表
-racecourse_codes = {
-    "札幌": "01", "函館": "02", "福島": "03", "新潟": "04",
-    "東京": "05", "中山": "06", "中京": "07", "京都": "08",
-    "阪神": "09", "小倉": "10"
-}
 
 # リンク生成とスクレイピング
 @keiba_router.post("/race_result")
-async def get_race_results_handler(request: RaceRequest):
+def get_race_results_handler(request: RaceRequest):
+    date_request = DateRequest(
+        racecourse=request.racecourse,
+        selectedDate=request.selectedDate,
+        race_num=request.race_num
+    )
+    race_code = get_kaisai_date_url(date_request)
     # レース場のコードを計算
-    racecourse_code = racecourse_codes.get(request.racecourse)
-    print(racecourse_code)
-    if not (results := get_race_results(racecourse_code, request.count, request.race_date, request.race_num)):
+    if not (results := get_race_results(race_code)):
         raise HTTPException(status_code=404, detail="レース結果が見つかりませんでした。")
     return results
 
-def get_race_results(racecourse_code, count, race_date, race_num):
-    load_url = f"https://race.netkeiba.com/race/result.html?race_id=2024{racecourse_code}{count}{race_date}{race_num}&rf=race_list"
-    response = requests.get(load_url)
+def get_race_results(race_code):
+    load_url = f"https://race.netkeiba.com/race/result.html?race_id={race_code}&rf=race_list"
+    header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"}
+    response = requests.get(load_url,  headers=header)
     print(load_url)
-    if response.status_code != 200:
-        return None
     
     soup = BeautifulSoup(response.content, "html.parser")
     race_result = soup.find(id="tab_ResultSelect_1_con")
+    
+
     if not race_result:
-        print(load_url)
-        print("aaaaaaaaaa")
+        print("レース結果が見つかりません (race_result is None).")
         return None
 
     result_table = race_result.find("tbody")
