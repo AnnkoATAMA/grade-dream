@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Box, TextField, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+// import Calendar from "./Calendar";
 
 interface RaceResult {
   rank: string;
@@ -16,18 +17,30 @@ interface RaceResult {
   odds: string;
 }
 
+
+
 const RaceForm: React.FC = () => {
   const [racecourse, setRacecourse] = useState("");
   const [count, setCount] = useState("");
   const [race_date, setRaceDate] = useState("");
   const [raceNum, setRaceNum] = useState("");
   const [results, setResults] = useState<RaceResult[] | null>(null);
+  // const [selectedDate, setSelectedDate] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
     setResults(null);
+
+    // try {
+    //   const date_response = await axios.post("https://grade.annko.jp/api/calendar/date_results", {
+    //     selectedDate
+    //   });
+    //   setSelectedDate(date_response.data);
+    // } catch (err) {
+    //   setError("開催日ではない");
+    // }
 
     try {
       const response = await axios.post<RaceResult[]>("https://grade.annko.jp/api/keiba/race_result", {
@@ -54,6 +67,7 @@ const RaceForm: React.FC = () => {
           onChange={(e) => setRacecourse(e.target.value)}
           margin="normal"
         />
+        {/* <Calendar /> */}
         <TextField
           fullWidth
           label="回数"
