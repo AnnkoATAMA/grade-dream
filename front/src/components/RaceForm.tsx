@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { Box, Button, Typography, Alert, MenuItem, Select, FormControl, InputLabel, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ja } from "date-fns/locale";  
 import axios from "axios";
-import { Box, TextField, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 
 interface RaceResult {
   rank: string;
@@ -18,71 +21,104 @@ interface RaceResult {
 
 const RaceForm: React.FC = () => {
   const [racecourse, setRacecourse] = useState("");
-  const [count, setCount] = useState("");
-  const [race_date, setRaceDate] = useState("");
-  const [raceNum, setRaceNum] = useState("");
-  const [results, setResults] = useState<RaceResult[] | null>(null);
+  const [selectedDate, setDate] = useState<Date | null>(null);
+  const [raceNum, setRaceNum] = useState<string>("");
   const [error, setError] = useState("");
+  const [results, setResults] = useState<RaceResult[] | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
-    setResults(null);
+    setError("");  
+    setResults(null); 
 
+    const formattedDate = selectedDate ? selectedDate.toISOString().split('T')[0] : ""; 
+    console.log({
+      racecourse,
+      selectedDate: formattedDate,
+      race_num: raceNum
+    });
     try {
       const response = await axios.post<RaceResult[]>("https://grade.annko.jp/api/keiba/race_result", {
         racecourse,
-        count,
-        race_date,
+        selectedDate: formattedDate, 
         race_num: raceNum,
       });
-      setResults(response.data);
+      
+      setResults(response.data);  
     } catch (err) {
-      setError("結果が取得できませんでした。");
+      setError("結果が取得できませんでした。");  
     }
   };
 
+  const racecourses = [
+    "札幌", "函館", "福島", "新潟", 
+    "東京", "中山", "中京", "京都", 
+    "阪神", "小倉"
+  ];
+
   return (
-    <Box sx={{ maxWidth: 840, margin: 'auto', padding: 3 }}>
-      <Typography variant="h5" gutterBottom>レース情報検索</Typography>
+    <Box sx={{ maxWidth: 840, margin: "auto", padding: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        レース情報検索
+      </Typography>
       <form onSubmit={handleSubmit}>
-        <TextField
+        {/* 開催地 */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>開催地</InputLabel>
+          <Select
+            value={racecourse}
+            onChange={(e) => setRacecourse(e.target.value)}
+            label="開催地"
+          >
+            {racecourses.map((course, index) => (
+              <MenuItem key={index} value={course}>
+                {course}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* 日付（カレンダー） */}
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
+          <DatePicker
+            label="YYYY-MM-DD"
+            value={selectedDate}
+            onChange={(newDate) => setDate(newDate)}
+          />
+        </LocalizationProvider>
+
+        {/* レース数 */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>レース数</InputLabel>
+          <Select
+            value={raceNum}
+            onChange={(e) => setRaceNum(e.target.value.toString())}
+            label="レース数"
+          >
+            {[...Array(12).keys()].map((i) => (
+              <MenuItem key={i + 1} value={i + 1}>
+                {i + 1}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
           fullWidth
-          label="開催地"
-          variant="outlined"
-          value={racecourse}
-          onChange={(e) => setRacecourse(e.target.value)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="回数"
-          variant="outlined"
-          value={count}
-          onChange={(e) => setCount(e.target.value)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="日数"
-          variant="outlined"
-          value={race_date}
-          onChange={(e) => setRaceDate(e.target.value)}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="レース数"
-          variant="outlined"
-          value={raceNum}
-          onChange={(e) => setRaceNum(e.target.value)}
-          margin="normal"
-        />
-        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>検索</Button>
+          sx={{ mt: 2 }}
+        >
+          検索
+        </Button>
       </form>
 
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
       {results && (
         <Paper sx={{ mt: 4 }}>
           <Typography variant="h6" align="center" sx={{ p: 2 }}>レース結果</Typography>
