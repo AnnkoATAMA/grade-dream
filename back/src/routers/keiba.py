@@ -1,4 +1,3 @@
-# routers/keiba.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import requests
@@ -6,7 +5,6 @@ from bs4 import BeautifulSoup
 
 keiba_router = APIRouter()
 
-# フロントエンドからの入力モデル
 class RaceRequest(BaseModel):
     racecourse: str
     count: str
@@ -30,11 +28,10 @@ async def get_race_results_handler(request: RaceRequest):
         raise HTTPException(status_code=404, detail="レース結果が見つかりませんでした。")
     return results
 
-    
-
 def get_race_results(racecourse_code, count, race_date, race_num):
     load_url = f"https://race.netkeiba.com/race/result.html?race_id=2024{racecourse_code}{count}{race_date}{race_num}&rf=race_list"
     response = requests.get(load_url)
+    print(load_url)
     if response.status_code != 200:
         return None
     

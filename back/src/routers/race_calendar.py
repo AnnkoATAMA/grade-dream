@@ -1,24 +1,29 @@
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from time import sleep
-from urllib import parse
-from selenium.webdriver.common.by import By
+import requests
+from bs4 import BeautifulSoup
 
-def parse_url(url, search_s):
-    parsed_url = parse.urlparse(url)
-    params = parse.parse_qs(parsed_url.query)
-    target = params.get(search_s, [None])[0]
-    return target
+calendar_router = APIRouter()
 
-def get_kaisai_date(driver, year, month):
-    url = f"/calendar.html?year={year}&month={month}"
-    driver.get(url)
+class DateRequest(BaseModel):
+    selectedDate: str
+
+@calendar_router.post("/date_result")
+def get_kaisai_date(request: DateRequest):
+    selectedDate = request.selectedDate
+    print(selectedDate)
+    year, month, date = selectedDate.split("-")
+    url = f"https://race.netkeiba.com/top/calendar.html?year={year}&month={month}"
+    print(url)
     sleep(2)
-    CalendarSelectMenu = driver.find_element(by=By.CLASS_NAME, value="CalendarSelectMenu")
-    Race_Calendar_Main = CalendarSelectMenu.find_element(by=By.CLASS_NAME, value="Race_Calendar_Main")
-    RaceCellBoxes = Race_Calendar_Main.find_elements(by=By.CLASS_NAME, value="RaceCellBox")
-    ancs = []
-    for RaceCellBox in RaceCellBoxes:
-        _a = RaceCellBox.find_elements(by=By.TAG_NAME, value="a")
-        if len(_a) == 1:
-            ancs.append(_a[0].get_attribute("href"))
-    kaisai_dates = [parse_url(anc, "kaisai_date") for anc in ancs]
-    return kaisai_dates
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+    tbody_tag = soup.find(class_ = "Calendar_Table")
+    a_tag = tbody_tag.find_all('a')
+    kaisai_date = a_tag.find(href = f"../top/race_list.html?kaisai_date={year}{month}{date}")
+    print(kaisai_date)
+    if kaisai_date:
+        return {"url": kaisai_date['href'], "text": kaisai_date.text.strip()}
+    else:
+        raise HTTPException(status_code=404, detail="指定された日付の開催データが見つかりませんでした。")
