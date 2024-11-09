@@ -9,7 +9,7 @@ calendar_router = APIRouter()
 class DateRequest(BaseModel):
     racecourse: str
     selectedDate: str
-    race_num:str
+    race_num: str
 
 # 競馬場コード対応表
 racecourse_codes = {
