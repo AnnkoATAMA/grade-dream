@@ -4,8 +4,6 @@ WORKDIR /front
 
 COPY package.json ./
 
-RUN yarn install
-
 COPY . .
 
-CMD ["yarn", "start"]
+CMD ["sh", "-c", "test -d node_modules || npm install; npm start"]
